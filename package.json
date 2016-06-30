@@ -1,0 +1,22 @@
+{
+  "name": "akasharender-epub",
+  "version": "0.1.0",
+  "description": "AkashaRender plugin to aid building EPUB's",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "akasharender": "akashacms/akasharender",
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akashacms/akasharender-epub.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/akashacms/akasharender-epub/issues"
+  },
+  "homepage": "https://github.com/akashacms/akasharender-epub#readme"
+}
