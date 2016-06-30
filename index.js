@@ -43,8 +43,7 @@ module.exports = class RenderEPUBPlugin extends akasha.Plugin {
 	}
 }
 
-
-module.exports = [
+module.exports.mahabhuta = [
 
     // EPUB does not support the name= attribute on a tags
     function($, metadata, dirty, done) {
