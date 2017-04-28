@@ -67,10 +67,6 @@ module.exports.mahabhuta.addMahafunc(new HnInParagraphCleanup());
 class LocalLinkRelativizer extends mahabhuta.Munger {
     get selector() { return 'html body a, html head link'; }
     process($, $link, metadata, dirty) {
-        var mapped = $link.attr('ak-mapped');
-        if (mapped && mapped === "yes") {
-            return Promise.resolve("ok");
-        }
         var href   = $link.attr('href');
 
         if (href && href !== '#') {
@@ -78,12 +74,11 @@ class LocalLinkRelativizer extends mahabhuta.Munger {
             // We're only going to look at local links,
             // no processing for external links
             // no processing for hash links within the document (such as footnotes)
-            if (! uHref.protocol && !uHref.slashes && !uHref.host && uHref.pathname) {
+            if (! uHref.protocol && !uHref.slashes && !uHref.host
+             && uHref.pathname && uHref.pathname.match(/^\//)) {
                 var fixedURL = rewriteURL(akasha, metadata.config, metadata, href, true);
                 // console.log(`org href ${href} fixed ${fixedURL}`);
-
                 $link.attr('href', fixedURL); // MAP href
-                $link.attr('ak-mapped', "yes");
             }
         }
         return Promise.resolve("ok");

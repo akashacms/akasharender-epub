@@ -1,6 +1,6 @@
 {
   "name": "akasharender-epub",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "AkashaRender plugin to aid building EPUB's",
   "main": "index.js",
   "repository": {
