@@ -1,22 +1,20 @@
 {
   "name": "akasharender-epub",
-  "version": "0.1.0",
+  "version": "0.3.1",
   "description": "AkashaRender plugin to aid building EPUB's",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "dependencies": {
-    "akasharender": "akashacms/akasharender"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/akashacms/akasharender-epub.git"
   },
-  "author": "",
+  "author": "David Herron <david@davidherron.com>",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/akashacms/akasharender-epub/issues"
   },
-  "homepage": "https://github.com/akashacms/akasharender-epub#readme"
+  "homepage": "https://github.com/akashacms/akasharender-epub#readme",
+  "dependencies": {
+    "mahabhuta": ">=0.6.3",
+    "akasharender": ">=0.5.14"
+  }
 }

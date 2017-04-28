@@ -21,8 +21,8 @@
 const path   = require('path');
 const util   = require('util');
 const url    = require('url');
-// const async  = require('async');
 const akasha = require('akasharender');
+const mahabhuta = require('mahabhuta');
 
 module.exports = class RenderEPUBPlugin extends akasha.Plugin {
 	constructor() {
@@ -43,27 +43,109 @@ module.exports = class RenderEPUBPlugin extends akasha.Plugin {
 	}
 }
 
-module.exports.mahabhuta = [
+module.exports.mahabhuta = new mahabhuta.MahafuncArray("akasharender epub support", {});
 
-    // EPUB does not support the name= attribute on a tags
-    function($, metadata, dirty, done) {
-        // console.log('checking [name] in '+ metadata.document.path);
-        $('a[name]').removeAttr('name');
-        done();
-    },
+class AnchorNameCleanup extends mahabhuta.Munger {
+    get selector() { return "a[name]"; }
+    process($, $link, metadata, dirty) {
+        $link.removeAttr('name');
+        return Promise.resolve("ok");
+    }
+}
+module.exports.mahabhuta.addMahafunc(new AnchorNameCleanup());
 
-    // For cases with an H{1,2,3,4,5} tag inside a paragraph, move
-    // the H tag outside the paragraph.
-    function($, metadata, dirty, done) {
-        // console.log('checking <p><h2></h2></p> in '+ metadata.document.path);
-        ['p > h1', 'p > h2', 'p > h3', 'p > h4', 'p > h5'].forEach(selector => {
-            $(selector).each(function(i, elem) {
-                // console.log('this.html '+ $(this).parent().html());
-                $(this).parent().after($(this).parent().html());
-                $(this).parent().remove();
-            });
-        });
-        done();
-    },
+class HnInParagraphCleanup extends mahabhuta.Munger {
+    get selector() { return 'p > h1, p > h2, p > h3, p > h4, p > h5'; }
+    process($, $link, metadata, dirty) {
+        $link.parent().after($link.parent().html());
+        $link.parent().remove();
+        return Promise.resolve("ok");
+    }
+}
+module.exports.mahabhuta.addMahafunc(new HnInParagraphCleanup());
 
-];
+class LocalLinkRelativizer extends mahabhuta.Munger {
+    get selector() { return 'html body a, html head link'; }
+    process($, $link, metadata, dirty) {
+        var mapped = $link.attr('ak-mapped');
+        if (mapped && mapped === "yes") {
+            return Promise.resolve("ok");
+        }
+        var href   = $link.attr('href');
+
+        if (href && href !== '#') {
+            var uHref = url.parse(href, true, true);
+            // We're only going to look at local links,
+            // no processing for external links
+            // no processing for hash links within the document (such as footnotes)
+            if (! uHref.protocol && !uHref.slashes && !uHref.host && uHref.pathname) {
+                var fixedURL = rewriteURL(akasha, metadata.config, metadata, href, true);
+                // console.log(`org href ${href} fixed ${fixedURL}`);
+
+                $link.attr('href', fixedURL); // MAP href
+                $link.attr('ak-mapped', "yes");
+            }
+        }
+        return Promise.resolve("ok");
+    }
+}
+module.exports.mahabhuta.addMahafunc(new LocalLinkRelativizer());
+
+function rewriteURL(akasha, config, metadata, sourceURL, allowExternal) {
+    // logger.trace('rewriteURL '+ sourceURL);
+    var urlSource = url.parse(sourceURL, true, true);
+    // logger.trace(util.inspect(urlSource));
+    if (urlSource.protocol || urlSource.slashes) {
+        if (!allowExternal) {
+            throw new Error("Got external URL when not allowed " + sourceURL);
+        } else return sourceURL;
+    } else {
+        var pRenderedUrl;
+        if (urlSource.pathname && urlSource.pathname.match(/^\//)) { // absolute URL
+            var prefix = computeRelativePrefixToRoot(metadata.rendered_url);
+            // logger.trace('absolute - prefix for '+ metadata.rendered_url +' == '+ prefix);
+            var ret = path.normalize(prefix+sourceURL);
+            // logger.trace('Rewrote '+ sourceURL +' to '+ ret);
+            return ret;
+        } else {
+            var ret = sourceURL; //   path.normalize(docdir+'/'+sourceURL);
+            // logger.trace('Rewrote '+ sourceURL +' to '+ ret);
+            return ret;
+        }
+
+        /* else if (urlSource.pathname.match(/^\.\//)) { // ./
+            // pRenderedUrl = url.parse(metadata.rendered_url);
+            // var docpath = pRenderedUrl.pathname;
+            // var docdir = path.dirname(docpath);
+            // logger.trace('Cur Dir - renderedURL '+ metadata.rendered_url +' docdir '+ docdir);
+            var ret = sourceURL; // path.normalize(docdir+'/'+sourceURL);
+            // logger.trace('Rewrote '+ sourceURL +' to '+ ret);
+            return ret;
+        } else if (urlSource.pathname.match(/^\.\.\//)) { // ../
+            // pRenderedUrl = url.parse(metadata.rendered_url);
+            // var docpath = pRenderedUrl.pathname;
+            // var docdir = path.dirname(docpath);
+            // logger.trace('Parent Dir - renderedURL '+ metadata.rendered_url +' docdir '+ docdir);
+            var ret = sourceURL; // path.normalize(docdir+'/'+sourceURL);
+            // logger.trace('Rewrote '+ sourceURL +' to '+ ret);
+            return ret;
+        } else { // anything else
+            // logger.trace('anything else '+ metadata.rendered_url);
+            // logger.trace(util.inspect(metadata));
+            // pRenderedUrl = url.parse(metadata.rendered_url);
+            // var docpath = pRenderedUrl.pathname;
+            // var docdir = path.dirname(docpath);
+            var ret = sourceURL; //   path.normalize(docdir+'/'+sourceURL);
+            // logger.trace('Rewrote '+ sourceURL +' to '+ ret);
+            return ret;
+        } */
+    }
+};
+
+function computeRelativePrefixToRoot(source) {
+    var prefix = '';
+    for (var parent = path.dirname(source); parent !== '.'; parent = path.dirname(parent)) {
+        prefix += '../';
+    }
+    return prefix === '' ? './' : prefix;
+};
