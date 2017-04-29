@@ -18,11 +18,14 @@
  */
 'use strict';
 
+const fs     = require('fs-extra-promise');
 const path   = require('path');
 const util   = require('util');
 const url    = require('url');
 const akasha = require('akasharender');
 const mahabhuta = require('mahabhuta');
+const request = require('request');
+const co     = require('co');
 
 module.exports = class RenderEPUBPlugin extends akasha.Plugin {
 	constructor() {
@@ -55,7 +58,7 @@ class AnchorNameCleanup extends mahabhuta.Munger {
 module.exports.mahabhuta.addMahafunc(new AnchorNameCleanup());
 
 class HnInParagraphCleanup extends mahabhuta.Munger {
-    get selector() { return 'p > h1, p > h2, p > h3, p > h4, p > h5'; }
+    get selector() { return 'p > h1, p > h2, p > h3, p > h4, p > h5, p > div'; }
     process($, $link, metadata, dirty) {
         $link.parent().after($link.parent().html());
         $link.parent().remove();
@@ -77,7 +80,7 @@ class LocalLinkRelativizer extends mahabhuta.Munger {
             if (! uHref.protocol && !uHref.slashes && !uHref.host
              && uHref.pathname && uHref.pathname.match(/^\//)) {
                 var fixedURL = rewriteURL(akasha, metadata.config, metadata, href, true);
-                // console.log(`org href ${href} fixed ${fixedURL}`);
+                // console.log(`orig href ${href} fixed ${fixedURL}`);
                 $link.attr('href', fixedURL); // MAP href
             }
         }
@@ -85,6 +88,52 @@ class LocalLinkRelativizer extends mahabhuta.Munger {
     }
 }
 module.exports.mahabhuta.addMahafunc(new LocalLinkRelativizer());
+
+class ImageURLFixerRelativizer extends mahabhuta.Munger {
+    get selector() { return 'html body img'; }
+    process($, $link, metadata, dirty) {
+        var src   = $link.attr('src');
+        if (!src) return Promise.resolve("ok");
+
+        var uHref = url.parse(src, true, true);
+        // For local images with src starting with '/' convert to a relativized src URL
+        if (! uHref.protocol && !uHref.slashes && !uHref.host
+         && uHref.pathname && uHref.pathname.match(/^\//)) {
+            var fixedURL = rewriteURL(akasha, metadata.config, metadata, src, true);
+            // console.log(`orig src ${href} fixed ${fixedURL}`);
+            $link.attr('src', fixedURL); // MAP href
+            return Promise.resolve("ok");
+        }
+        // For remote images we need to download the image, saving it into the eBook
+        if (uHref.protocol || uHref.slashes || uHref.host) {
+            return co(function* () {
+                var res = yield new Promise((resolve, reject) => {
+                    request(src, (error, response, body) => {
+                        if (error) reject(error);
+                        else resolve({response, body});
+                    });
+                });
+                var dlPath = path.join('/..dlimages', res.response.request.uri.path);
+                var pathWriteTo = path.join(metadata.config.renderDestination, dlPath);
+                $link.attr('src', dlPath);
+                yield new Promise((resolve, reject) => {
+                    fs.ensureDir(path.dirname(pathWriteTo), err => {
+                        if (err) reject(err);
+                        else resolve();
+                    });
+                });
+                yield new Promise((resolve, reject) => {
+                    fs.writeFile(pathWriteTo, res.body, err => {
+                        if (err) reject(err);
+                        else resolve();
+                    });
+                });
+            });
+        }
+        return Promise.resolve("ok");
+    }
+}
+module.exports.mahabhuta.addMahafunc(new ImageURLFixerRelativizer());
 
 function rewriteURL(akasha, config, metadata, sourceURL, allowExternal) {
     // logger.trace('rewriteURL '+ sourceURL);
