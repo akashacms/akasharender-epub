@@ -108,26 +108,16 @@ class ImageURLFixerRelativizer extends mahabhuta.Munger {
         if (uHref.protocol || uHref.slashes || uHref.host) {
             return co(function* () {
                 var res = yield new Promise((resolve, reject) => {
-                    request(src, (error, response, body) => {
+                    request({ url: src, encoding: null }, (error, response, body) => {
                         if (error) reject(error);
                         else resolve({response, body});
                     });
                 });
-                var dlPath = path.join('/..dlimages', res.response.request.uri.path);
+                var dlPath = path.join('/___dlimages', res.response.request.uri.path);
                 var pathWriteTo = path.join(metadata.config.renderDestination, dlPath);
                 $link.attr('src', dlPath);
-                yield new Promise((resolve, reject) => {
-                    fs.ensureDir(path.dirname(pathWriteTo), err => {
-                        if (err) reject(err);
-                        else resolve();
-                    });
-                });
-                yield new Promise((resolve, reject) => {
-                    fs.writeFile(pathWriteTo, res.body, err => {
-                        if (err) reject(err);
-                        else resolve();
-                    });
-                });
+                yield fs.ensureDirAsync(path.dirname(pathWriteTo));
+                return fs.writeFileAsync(pathWriteTo, res.body, 'binary');
             });
         }
         return Promise.resolve("ok");
