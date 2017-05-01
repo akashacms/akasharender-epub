@@ -28,12 +28,15 @@ const request = require('request');
 const co     = require('co');
 
 module.exports = class RenderEPUBPlugin extends akasha.Plugin {
-	constructor() {
-		super("akasharender-epub");
-	}
+    constructor() {
+        super("akasharender-epub");
+    }
 
-	configure(config) {
-		this._config = config;
+    configure(config) {
+
+        console.log('akasharender-epub configure');
+
+        this._config = config;
 
         config.setMahabhutaConfig({
             recognizeSelfClosing: true,
@@ -41,12 +44,28 @@ module.exports = class RenderEPUBPlugin extends akasha.Plugin {
             xmlMode: true
         });
 
-		// config.addPartialsDir(path.join(__dirname, 'partials'));
-		config.addMahabhuta(module.exports.mahabhuta);
-	}
+        config.addPartialsDir(path.join(__dirname, 'partials'));
+        config.addMahabhuta(module.exports.mahabhuta);
+    }
 }
 
 module.exports.mahabhuta = new mahabhuta.MahafuncArray("akasharender epub support", {});
+
+class OEmbedCleanup extends mahabhuta.Munger {
+    get selector() { return '.akasharender-epub-embed-preview'; }
+    process($, $link, metadata, dirty) {
+        // console.log(`akasharender-epub-embed-preview ${$link.find('body').html()}`);
+        // This requires the framed-embed.html.ejs which simply inserts the preview.
+        // For YouTube, that preview contains an html/body pair that needs to be removed.
+        // The website should have its own mahafunc to further customize this.
+        if ($link.find('body').get(0)) {
+            $link.parent().after($link.find('body').html());
+            $link.remove();
+        }
+        return Promise.resolve("ok");
+    }
+}
+module.exports.mahabhuta.addMahafunc(new OEmbedCleanup());
 
 class AnchorNameCleanup extends mahabhuta.Munger {
     get selector() { return "a[name]"; }
