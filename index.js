@@ -34,8 +34,6 @@ module.exports = class RenderEPUBPlugin extends akasha.Plugin {
 
     configure(config) {
 
-        console.log('akasharender-epub configure');
-
         this._config = config;
 
         config.setMahabhutaConfig({
