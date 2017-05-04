@@ -130,11 +130,28 @@ class ImageURLFixerRelativizer extends mahabhuta.Munger {
                         else resolve({response, body});
                     });
                 });
-                var dlPath = path.join('/___dlimages', res.response.request.uri.path);
+                // Set up the path for the image.
+                // We'll write this path into the <img> tag.
+                // We'll store the file into the corresponding file on-disk.
+                //
+                // We need to take care with certain characters in the path.
+                // For example, Amazon will use a file-name like 81yP%2B05t98L._SL1500_.jpg
+                // in its images.  That '%' character causes problems when it's part
+                // of a URL.  Cheerio doesn't do the right thing to encode this
+                // string correctly.  What we'll do instead is hide characters that are
+                // known to be dangerous, using this rewriting technique.
+                var dlPath = path.join('/___dlimages',
+                    res.response.request.uri.path
+                            .replace('%', '__'));
                 var pathWriteTo = path.join(metadata.config.renderDestination, dlPath);
+                // console.log(`ImageURLFixerRelativizer download ${res.response.request.uri.path} dlPath ${dlPath} pathWriteTo ${pathWriteTo}`);
                 $link.attr('src', dlPath);
                 yield fs.ensureDirAsync(path.dirname(pathWriteTo));
                 return fs.writeFileAsync(pathWriteTo, res.body, 'binary');
+            })
+            .catch(err => {
+                console.error(`ImageURLFixerRelativizer ERROR ${err}`);
+                throw err;
             });
         }
         return Promise.resolve("ok");
