@@ -34,8 +34,6 @@ module.exports = class RenderEPUBPlugin extends akasha.Plugin {
 
     configure(config) {
 
-        this._config = config;
-
         config.setMahabhutaConfig({
             recognizeSelfClosing: true,
             recognizeCDATA: true,
