@@ -14,8 +14,7 @@
   },
   "homepage": "https://github.com/akashacms/akasharender-epub#readme",
   "dependencies": {
-    "mahabhuta": ">=0.6.3",
-    "akasharender": ">=0.5.14",
+    "akasharender": ">=0.6",
     "request": "*",
     "fs-extra-promise": "*",
     "co": "*"
