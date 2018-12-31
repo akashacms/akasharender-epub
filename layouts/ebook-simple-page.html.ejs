@@ -1,0 +1,13 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
+<head>
+<title><%= title %></title>
+</head>
+<body>
+    <header><h1><%= title %></h1></header>
+    <% if (typeof teaser  !== "undefined") { %><div class="lead"><%= teaser %></div> <% } %>
+    <%- content %>
+    <% if (typeof copyrightPartial !== "undefined") { %>
+        <footer><partial file-name="<%= copyrightPartial %>"/></footer>
+    <% } %>
+</body>
+</html>

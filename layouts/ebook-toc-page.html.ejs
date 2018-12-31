@@ -1,0 +1,19 @@
+
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="en" lang="en">
+<head>
+<title><%= title %></title>
+<ak-stylesheets></ak-stylesheets>
+<ak-headerJavaScript></ak-headerJavaScript>
+</head>
+<body>
+    <section>
+    <header><h1><%= title %></h1></header>
+    <% if (typeof teaser  !== "undefined") { %><div class="lead"><%= teaser %></div> <% } %>
+    <article><%- content %></article>
+    <% if (typeof copyrightPartial !== "undefined") { %>
+    <footer><partial file-name="<%= copyrightPartial %>"/></footer>
+    <% } %>
+    </section>
+    <ak-footerJavaScript></ak-footerJavaScript>
+</body>
+</html>

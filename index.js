@@ -25,11 +25,13 @@ const url    = require('url');
 const akasha = require('akasharender');
 const mahabhuta = akasha.mahabhuta;
 const request = require('request');
-const co     = require('co');
+
+akasha.registerRenderer(require('./render-html.js'));
+akasha.registerRenderer(require('./render-xhtml.js'));
 
 module.exports = class RenderEPUBPlugin extends akasha.Plugin {
     constructor() {
-        super("akasharender-epub");
+        super("@akashacms/plugins-epub");
     }
 
     configure(config) {
@@ -40,7 +42,14 @@ module.exports = class RenderEPUBPlugin extends akasha.Plugin {
             xmlMode: true
         });
 
-        config.addPartialsDir(path.join(__dirname, 'partials'));
+        // TODO in the electron app this will not work since Webpack blah-blah-blah
+
+        let moduleDirname = path.dirname(require.resolve('@akashacms/plugins-epub'));
+        config.addPartialsDir(path.join(moduleDirname, 'partials'));
+        config.addLayoutsDir(path.join(moduleDirname, 'layouts'));
+
+        /* config.addPartialsDir(path.join(__dirname, 'partials'));
+        config.addLayoutsDir(path.join(__dirname, 'layouts')); */
         config.addMahabhuta(module.exports.mahabhuta);
     }
 }
@@ -106,9 +115,9 @@ module.exports.mahabhuta.addMahafunc(new LocalLinkRelativizer());
 
 class ImageURLFixerRelativizer extends mahabhuta.Munger {
     get selector() { return 'html body img'; }
-    process($, $link, metadata, dirty) {
+    async process($, $link, metadata, dirty) {
         var src   = $link.attr('src');
-        if (!src) return Promise.resolve("ok");
+        if (!src) return "ok";
 
         var uHref = url.parse(src, true, true);
         // For local images with src starting with '/' convert to a relativized src URL
@@ -117,12 +126,13 @@ class ImageURLFixerRelativizer extends mahabhuta.Munger {
             var fixedURL = rewriteURL(akasha, metadata.config, metadata, src, true);
             // console.log(`orig src ${href} fixed ${fixedURL}`);
             $link.attr('src', fixedURL); // MAP href
-            return Promise.resolve("ok");
+            return "ok";
         }
         // For remote images we need to download the image, saving it into the eBook
+        // TODO use dlassets
         if (uHref.protocol || uHref.slashes || uHref.host) {
-            return co(function* () {
-                var res = yield new Promise((resolve, reject) => {
+            try {
+                var res = await new Promise((resolve, reject) => {
                     request({ url: src, encoding: null }, (error, response, body) => {
                         if (error) reject(error);
                         else resolve({response, body});
@@ -144,15 +154,14 @@ class ImageURLFixerRelativizer extends mahabhuta.Munger {
                 var pathWriteTo = path.join(metadata.config.renderDestination, dlPath);
                 // console.log(`ImageURLFixerRelativizer download ${res.response.request.uri.path} dlPath ${dlPath} pathWriteTo ${pathWriteTo}`);
                 $link.attr('src', dlPath);
-                yield fs.ensureDirAsync(path.dirname(pathWriteTo));
-                return fs.writeFileAsync(pathWriteTo, res.body, 'binary');
-            })
-            .catch(err => {
+                await fs.ensureDirAsync(path.dirname(pathWriteTo));
+                await fs.writeFileAsync(pathWriteTo, res.body, 'binary');
+            } catch(err) {
                 console.error(`ImageURLFixerRelativizer ERROR ${err}`);
                 throw err;
-            });
+            }
         }
-        return Promise.resolve("ok");
+        return "ok";
     }
 }
 module.exports.mahabhuta.addMahafunc(new ImageURLFixerRelativizer());

@@ -1,6 +1,6 @@
 {
-  "name": "akasharender-epub",
-  "version": "0.3.7",
+  "name": "@akashacms/plugins-epub",
+  "version": "0.4.1",
   "description": "AkashaRender plugin to aid building EPUB's",
   "main": "index.js",
   "repository": {
@@ -16,7 +16,6 @@
   "dependencies": {
     "akasharender": ">=0.6",
     "request": "*",
-    "fs-extra-promise": "*",
-    "co": "*"
+    "fs-extra-promise": "*"
   }
 }
