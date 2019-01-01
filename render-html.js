@@ -29,6 +29,27 @@ class EPUBHTMLRenderer extends Renderer {
         return mahabhuta.processAsync(rendered, metadata, mahafuncs);
     }
 
+    // The reasoning in these two functions is that 
+    // we are being given a file name w/ .html extension
+    // but our goal is producing XHTML files with .xhtml extension
+    //
+    // In these functions we force the extension to be .xhtml
+
+    filePath(fname) {
+        var matches;
+        if ((matches = fname.match(this.regex[0])) !== null) {
+            return `${matches[1]}.xhtml`;
+        } else return null;
+    }
+
+    fileExtension(fname) {
+        var matches;
+        if ((matches = fname.match(this.regex[0])) !== null) {
+            return '.xhtml';
+        }
+        return null;
+    }
+
     renderSync(text, metadata) {
         throw new Error("Cannot render .html in synchronous environment");
     }
@@ -41,15 +62,13 @@ class EPUBHTMLRenderer extends Renderer {
         return xhtml;
     }
 
+    // In this function we force the file to be .xhtml format
+
     async renderToFile(basedir, fpath, renderTo, renderToPlus, metadata, config) {
         var html = await this.readFile(basedir, fpath);
         var xhtml = await this.render(html, { config: config });
-        let dirname = path.dirname(fpath);
-        let basename = path.basename(fpath, '.html');
         await this.writeFile(renderTo,
-                                this.filePath(
-                                    path.join(dirname, `${basename}.xhtml`)
-                                ),
+                                this.filePath(fpath),
                                 xhtml);
     }
 }

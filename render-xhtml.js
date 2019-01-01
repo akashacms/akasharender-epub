@@ -29,6 +29,21 @@ class EPUBXHTMLRenderer extends Renderer {
         return mahabhuta.processAsync(rendered, metadata, mahafuncs);
     }
 
+    filePath(fname) {
+        var matches;
+        if ((matches = fname.match(this.regex[0])) !== null) {
+            return `${matches[1]}.xhtml`;
+        } else return null;
+    }
+
+    fileExtension(fname) {
+        var matches;
+        if ((matches = fname.match(this.regex[0])) !== null) {
+            return '.xhtml';
+        }
+        return null;
+    }
+
     renderSync(text, metadata) {
         throw new Error("Cannot render .html in synchronous environment");
     }
