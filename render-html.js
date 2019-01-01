@@ -1,32 +1,14 @@
 
 const Renderer      = require('akasharender/Renderer');
+const HTMLRenderer  = require('akasharender/HTMLRenderer');
 const parse5        = require('parse5');
 const xmlserializer = require('xmlserializer');
 const path          = require('path');
 const mahabhuta     = require('mahabhuta');
 
-class EPUBHTMLRenderer extends Renderer {
+class EPUBHTMLRenderer extends HTMLRenderer {
     constructor() {
         super(".html", /^(.*)\.(html)$/);
-    }
-
-    /**
-     * Support for Mahabhuta -- jQuery-like processing of HTML DOM before Rendering
-     * down to HTML text.
-     */
-    maharun(rendered, metadata, mahafuncs) {
-        if (typeof rendered === 'undefined' || rendered === null) {
-            throw new Error('no rendered provided');
-        }
-        if (typeof metadata === 'undefined' || metadata === null) {
-            throw new Error('no metadata provided');
-        }
-        if (typeof mahabhuta === 'undefined' || mahabhuta === null) {
-            throw new Error('no mahabhuta provided');
-        }
-        
-        if (metadata.config.mahabhutaConfig) mahabhuta.config(metadata.config.mahabhutaConfig);
-        return mahabhuta.processAsync(rendered, metadata, mahafuncs);
     }
 
     // The reasoning in these two functions is that 
@@ -65,12 +47,40 @@ class EPUBHTMLRenderer extends Renderer {
     // In this function we force the file to be .xhtml format
 
     async renderToFile(basedir, fpath, renderTo, renderToPlus, metadata, config) {
+
+        var docdata = metadata;
+        var metadata = await this.initMetadata(config, basedir, fpath, renderToPlus, docdata, {});
+        docdata = metadata;
+
         var html = await this.readFile(basedir, fpath);
-        var xhtml = await this.render(html, { config: config });
+        var xhtml = await this.render(html, docdata);
         await this.writeFile(renderTo,
                                 this.filePath(fpath),
                                 xhtml);
     }
+
+    /**
+     * Extract the frontmatter for the given file.
+     */
+    async frontmatter(basedir, fpath) {
+        return {};
+    }
+
+    parseFrontmatter(content) {
+        return {};
+    }
+
+    /**
+     * Extract the metadata from the given file.  Where the `frontmatter` function
+     * returns an object that contains the metadata, this function returns only
+     * the metadata object.
+     *
+     * This metadata is solely the data stored in the file.
+     */
+    async metadata(basedir, fpath) {
+        return {};
+    }
+
 }
 
 module.exports = new EPUBHTMLRenderer();
