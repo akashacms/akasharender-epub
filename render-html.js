@@ -5,6 +5,7 @@ const parse5        = require('parse5');
 const xmlserializer = require('xmlserializer');
 const path          = require('path');
 const mahabhuta     = require('mahabhuta');
+const renderXHTML   = require('./render-xhtml');
 
 class EPUBHTMLRenderer extends HTMLRenderer {
     constructor() {
@@ -47,12 +48,12 @@ class EPUBHTMLRenderer extends HTMLRenderer {
     // In this function we force the file to be .xhtml format
 
     async renderToFile(basedir, fpath, renderTo, renderToPlus, metadata, config) {
-
-        var docdata = metadata;
-        var metadata = await this.initMetadata(config, basedir, fpath, renderToPlus, docdata, {});
+        var fm = await this.frontmatter(basedir, fpath);
+        var docdata;
+        var metadata = await this.initMetadata(config, basedir, fpath, renderToPlus, docdata, fm.data);
         docdata = metadata;
 
-        var html = await this.readFile(basedir, fpath);
+        var html = fm.content;
         var xhtml = await this.render(html, docdata);
         await this.writeFile(renderTo,
                                 this.filePath(fpath),
@@ -63,11 +64,15 @@ class EPUBHTMLRenderer extends HTMLRenderer {
      * Extract the frontmatter for the given file.
      */
     async frontmatter(basedir, fpath) {
-        return {};
+        var html = await this.readFile(basedir, fpath);
+        return this.parseFrontmatter(html);
     }
 
     parseFrontmatter(content) {
-        return {};
+        return {
+            content,
+            data: renderXHTML.readMetadata(content)
+        };
     }
 
     /**
@@ -78,7 +83,8 @@ class EPUBHTMLRenderer extends HTMLRenderer {
      * This metadata is solely the data stored in the file.
      */
     async metadata(basedir, fpath) {
-        return {};
+        var fm = await this.frontmatter(basedir, fpath);
+        return fm.data;
     }
 
 }
