@@ -1,6 +1,6 @@
 
-const Renderer      = require('akasharender/Renderer');
-const HTMLRenderer  = require('akasharender/HTMLRenderer');
+const Renderer      = require('akasharender').Renderer;
+const HTMLRenderer  = require('akasharender').HTMLRenderer;
 const parse5        = require('parse5');
 const xmlserializer = require('xmlserializer');
 const DOMParser     = require('xmldom').DOMParser;

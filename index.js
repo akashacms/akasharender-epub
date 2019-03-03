@@ -18,7 +18,7 @@
  */
 'use strict';
 
-const fs     = require('fs-extra-promise');
+const fs     = require('fs-extra');
 const path   = require('path');
 const util   = require('util');
 const url    = require('url');
@@ -42,6 +42,9 @@ module.exports = class RenderEPUBPlugin extends akasha.Plugin {
             xmlMode: true
         });
 
+        // config.registerRenderer(require('./render-html.js'));
+        // config.registerRenderer(require('./render-xhtml.js'));
+        
         // TODO in the electron app this will not work since Webpack blah-blah-blah
 
         let moduleDirname = path.dirname(require.resolve('@akashacms/plugins-epub'));
@@ -103,7 +106,7 @@ class LocalLinkRelativizer extends mahabhuta.Munger {
             // no processing for hash links within the document (such as footnotes)
             if (! uHref.protocol && !uHref.slashes && !uHref.host
              && uHref.pathname && uHref.pathname.match(/^\//)) {
-                var fixedURL = rewriteURL(akasha, metadata.config, metadata, href, true);
+                var fixedURL = rewriteURL(metadata, href, true);
                 // console.log(`orig href ${href} fixed ${fixedURL}`);
                 $link.attr('href', fixedURL); // MAP href
             }
@@ -113,6 +116,8 @@ class LocalLinkRelativizer extends mahabhuta.Munger {
 }
 module.exports.mahabhuta.addMahafunc(new LocalLinkRelativizer());
 
+
+// TODO THIS MUST BE REPLACED WITH dlassets plugin
 class ImageURLFixerRelativizer extends mahabhuta.Munger {
     get selector() { return 'html body img'; }
     async process($, $link, metadata, dirty) {
@@ -123,7 +128,7 @@ class ImageURLFixerRelativizer extends mahabhuta.Munger {
         // For local images with src starting with '/' convert to a relativized src URL
         if (! uHref.protocol && !uHref.slashes && !uHref.host
          && uHref.pathname && uHref.pathname.match(/^\//)) {
-            var fixedURL = rewriteURL(akasha, metadata.config, metadata, src, true);
+            var fixedURL = rewriteURL(metadata, src, true);
             // console.log(`orig src ${href} fixed ${fixedURL}`);
             $link.attr('src', fixedURL); // MAP href
             return "ok";
@@ -154,8 +159,8 @@ class ImageURLFixerRelativizer extends mahabhuta.Munger {
                 var pathWriteTo = path.join(metadata.config.renderDestination, dlPath);
                 // console.log(`ImageURLFixerRelativizer download ${res.response.request.uri.path} dlPath ${dlPath} pathWriteTo ${pathWriteTo}`);
                 $link.attr('src', dlPath);
-                await fs.ensureDirAsync(path.dirname(pathWriteTo));
-                await fs.writeFileAsync(pathWriteTo, res.body, 'binary');
+                await fs.mkdirs(path.dirname(pathWriteTo));
+                await fs.writeFile(pathWriteTo, res.body, 'binary');
             } catch(err) {
                 console.error(`ImageURLFixerRelativizer ERROR ${err}`);
                 throw err;
@@ -166,7 +171,7 @@ class ImageURLFixerRelativizer extends mahabhuta.Munger {
 }
 module.exports.mahabhuta.addMahafunc(new ImageURLFixerRelativizer());
 
-function rewriteURL(akasha, config, metadata, sourceURL, allowExternal) {
+function rewriteURL(metadata, sourceURL, allowExternal) {
     // logger.trace('rewriteURL '+ sourceURL);
     var urlSource = url.parse(sourceURL, true, true);
     // logger.trace(util.inspect(urlSource));
