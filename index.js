@@ -91,12 +91,12 @@ module.exports = class RenderEPUBPlugin extends akasha.Plugin {
          */
         let arrayOptions = {};
         let mahafuncs = new mahabhuta.MahafuncArray(`${pluginName} support`, arrayOptions);
-        mahafuncs.addMahafunc(new OEmbedCleanup())
-                .addMahafunc(new AnchorNameCleanup())
-                .addMahafunc(new HnInParagraphCleanup())
-                .addMahafunc(new LocalLinkRelativizer())
-                .addMahafunc(new LocalLinkHTML2XHTML())
-                .addMahafunc(new ImageURLFixerRelativizer());
+        mahafuncs.addMahafunc(new OEmbedCleanup());
+        mahafuncs.addMahafunc(new AnchorNameCleanup());
+        mahafuncs.addMahafunc(new HnInParagraphCleanup());
+        mahafuncs.addMahafunc(new LocalLinkRelativizer());
+        mahafuncs.addMahafunc(new LocalLinkHTML2XHTML());
+        mahafuncs.addMahafunc(new ImageURLFixerRelativizer());
         // console.log(`RenderEPUBPlugin `, mahafuncs);
         config.addMahabhuta(mahafuncs);
     }
