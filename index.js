@@ -1,6 +1,6 @@
 /**
  *
- * Copyright 2016 David Herron
+ * Copyright 2016, 2017, 2018, 2019 David Herron
  *
  * This file is part of AkashaCMS (http://akashacms.com/).
  *
@@ -24,41 +24,95 @@ const util   = require('util');
 const url    = require('url');
 const akasha = require('akasharender');
 const mahabhuta = akasha.mahabhuta;
-const request = require('request');
 
-akasha.registerRenderer(require('./render-html.js'));
-akasha.registerRenderer(require('./render-xhtml.js'));
+/**
+ * This plugin focuses on tweaking AkashaCMS to produce EPUB's.  When this plugin
+ * is enabled, AkashaCMS cannot produce regular web page output, it can only be
+ * used to produce DPUB output.  That means rendering an <em>.html.md</em>
+ * (for example) goes to an <em>.xhtml</em> rather than <em>.html</em> output, 
+ * plus the output is in XHTML format rather than regular HTML format.
+ */
+
+const pluginName = '@akashacms/plugins-epub';
 
 module.exports = class RenderEPUBPlugin extends akasha.Plugin {
     constructor() {
-        super("@akashacms/plugins-epub");
+        super(pluginName);
     }
 
     configure(config) {
 
+        /**
+         * These two Renderers handle an <em>.html</em> or <em>.xhtml</em> file
+         * ensuring to produce an <em>.xhtml</em> as output.  They also attempt
+         * to fetch metadata from the &lt;head&gt; section.
+         */
+        config.registerRenderer(require('./render-html.js'));
+        config.registerRenderer(require('./render-xhtml.js'));
+        
+        /**
+         * These subclasses of the built-in AkashaCMS plugins override the
+         * <em>filePath</em> method to ensure the rendered file is output to 
+         * the <em>.xhtml</em> extension.
+         */
+        config.registerOverrideRenderer(new AsciidocRendererOverride());
+        config.registerOverrideRenderer(new EJSRendererOverride());
+        config.registerOverrideRenderer(new MarkdownRendererOverride());
+        config.registerOverrideRenderer(new JSONRendererOverride());
+        
+        /**
+         * This is where XHTML mode for output is selected
+         */
         config.setMahabhutaConfig({
             recognizeSelfClosing: true,
             recognizeCDATA: true,
             xmlMode: true
         });
 
-        // config.registerRenderer(require('./render-html.js'));
-        // config.registerRenderer(require('./render-xhtml.js'));
-        
         // TODO in the electron app this will not work since Webpack blah-blah-blah
 
-        let moduleDirname = path.dirname(require.resolve('@akashacms/plugins-epub'));
+        let moduleDirname = path.dirname(require.resolve(pluginName));
+        // The partials directory overrides many templates used by
+        // other plugins to make those custom tags safe for EPUB
         config.addPartialsDir(path.join(moduleDirname, 'partials'));
+        // The layouts directory contains some default page layouts
         config.addLayoutsDir(path.join(moduleDirname, 'layouts'));
 
-        /* config.addPartialsDir(path.join(__dirname, 'partials'));
-        config.addLayoutsDir(path.join(__dirname, 'layouts')); */
-        config.addMahabhuta(module.exports.mahabhuta);
+        /**
+         * This MahafuncArray does various cleanups of the HTML so it plays
+         * better with EPUB's requirements.
+         * 
+         * Note that external images and external CSS stylesheets is also a
+         * big requirement in EPUB.  This plugin used to contain a Mahafunc to
+         * handle downloading those files.  However that Mahafunc was spun off
+         * to become the akashacms-dlassets plugin.
+         * 
+         * Therefore akashacms-dlassets is required to successfully package
+         * EPUB's that reference external assets.
+         */
+        let arrayOptions = {};
+        let mahafuncs = new mahabhuta.MahafuncArray(`${pluginName} support`, arrayOptions);
+        mahafuncs.addMahafunc(new OEmbedCleanup())
+                .addMahafunc(new AnchorNameCleanup())
+                .addMahafunc(new HnInParagraphCleanup())
+                .addMahafunc(new LocalLinkRelativizer())
+                .addMahafunc(new LocalLinkHTML2XHTML())
+                .addMahafunc(new ImageURLFixerRelativizer());
+        // console.log(`RenderEPUBPlugin `, mahafuncs);
+        config.addMahabhuta(mahafuncs);
     }
 }
 
-module.exports.mahabhuta = new mahabhuta.MahafuncArray("akasharender epub support", {});
+const html2xhtml = (s) => { return s.replace(/\.html$/i, ".xhtml"); }
 
+/**
+ * This cleans up instances of embedding e.g. YouTube videos into an EPUB.
+ * Obviously that won't fly in the EPUB, so therefore it must be converted
+ * to the HTML for the preview supplied by YouTube rather than the YouTube player.
+ * 
+ * Hence this relies on overriding the partial.  Plus this Mahafunc cleans up
+ * the messed up HTML that is observed.
+ */
 class OEmbedCleanup extends mahabhuta.Munger {
     get selector() { return '.akasharender-epub-embed-preview'; }
     process($, $link, metadata, dirty) {
@@ -73,8 +127,10 @@ class OEmbedCleanup extends mahabhuta.Munger {
         return Promise.resolve("ok");
     }
 }
-module.exports.mahabhuta.addMahafunc(new OEmbedCleanup());
 
+/**
+ * EPUB does not allow &lt;a&gt; tags with <em>name</em> attributes.
+ */
 class AnchorNameCleanup extends mahabhuta.Munger {
     get selector() { return "a[name]"; }
     process($, $link, metadata, dirty) {
@@ -82,8 +138,11 @@ class AnchorNameCleanup extends mahabhuta.Munger {
         return Promise.resolve("ok");
     }
 }
-module.exports.mahabhuta.addMahafunc(new AnchorNameCleanup());
 
+/**
+ * There are cases where Hn tags end up inside a &lt;p&gt; tag, and EPUB
+ * barfs up a nasty error message on that.  This removes that condition.
+ */
 class HnInParagraphCleanup extends mahabhuta.Munger {
     get selector() { return 'p > h1, p > h2, p > h3, p > h4, p > h5, p > div'; }
     process($, $link, metadata, dirty) {
@@ -92,11 +151,15 @@ class HnInParagraphCleanup extends mahabhuta.Munger {
         return Promise.resolve("ok");
     }
 }
-module.exports.mahabhuta.addMahafunc(new HnInParagraphCleanup());
 
+/**
+ * Links to other resources inside documents have to be a relative path
+ * rather than a fixed path.  This handles rewriting these for &lt;a&gt;
+ * and &lt;link&gt; tags.
+ */
 class LocalLinkRelativizer extends mahabhuta.Munger {
     get selector() { return 'html body a, html head link'; }
-    process($, $link, metadata, dirty) {
+    async process($, $link, metadata, dirty) {
         var href   = $link.attr('href');
 
         if (href && href !== '#') {
@@ -111,13 +174,13 @@ class LocalLinkRelativizer extends mahabhuta.Munger {
                 $link.attr('href', fixedURL); // MAP href
             }
         }
-        return Promise.resolve("ok");
+        return "ok";
     }
 }
-module.exports.mahabhuta.addMahafunc(new LocalLinkRelativizer());
 
-
-// TODO THIS MUST BE REPLACED WITH dlassets plugin
+/**
+ * Like LocalLinkRelativizer but handles &lt;img&gt tags
+ */
 class ImageURLFixerRelativizer extends mahabhuta.Munger {
     get selector() { return 'html body img'; }
     async process($, $link, metadata, dirty) {
@@ -133,43 +196,37 @@ class ImageURLFixerRelativizer extends mahabhuta.Munger {
             $link.attr('src', fixedURL); // MAP href
             return "ok";
         }
-        // For remote images we need to download the image, saving it into the eBook
-        // TODO use dlassets
-        if (uHref.protocol || uHref.slashes || uHref.host) {
-            try {
-                var res = await new Promise((resolve, reject) => {
-                    request({ url: src, encoding: null }, (error, response, body) => {
-                        if (error) reject(error);
-                        else resolve({response, body});
-                    });
-                });
-                // Set up the path for the image.
-                // We'll write this path into the <img> tag.
-                // We'll store the file into the corresponding file on-disk.
-                //
-                // We need to take care with certain characters in the path.
-                // For example, Amazon will use a file-name like 81yP%2B05t98L._SL1500_.jpg
-                // in its images.  That '%' character causes problems when it's part
-                // of a URL.  Cheerio doesn't do the right thing to encode this
-                // string correctly.  What we'll do instead is hide characters that are
-                // known to be dangerous, using this rewriting technique.
-                var dlPath = path.join('/___dlimages',
-                    res.response.request.uri.path
-                            .replace('%', '__'));
-                var pathWriteTo = path.join(metadata.config.renderDestination, dlPath);
-                // console.log(`ImageURLFixerRelativizer download ${res.response.request.uri.path} dlPath ${dlPath} pathWriteTo ${pathWriteTo}`);
-                $link.attr('src', dlPath);
-                await fs.mkdirs(path.dirname(pathWriteTo));
-                await fs.writeFile(pathWriteTo, res.body, 'binary');
-            } catch(err) {
-                console.error(`ImageURLFixerRelativizer ERROR ${err}`);
-                throw err;
+        return "ok";
+    }
+}
+
+/**
+ * Because we have Renderers which force file names to be named <em>.xhtml</em>
+ * we need to change links to local <em>.html</em> resources to use
+ * the <em>.xhtml</em> extension instead.
+ */
+class LocalLinkHTML2XHTML extends mahabhuta.Munger {
+    get selector() { return 'html body a'; }
+    async process($, $link, metadata, dirty) {
+        var href   = $link.attr('href');
+
+        if (href && href !== '#') {
+            var uHref = url.parse(href, true, true);
+            // We're only going to look at local links,
+            // no processing for external links
+            // no processing for hash links within the document (such as footnotes)
+            // console.log(`LocalLinkHTML2XHTML href ${href}`);
+            if (! uHref.protocol && !uHref.slashes && !uHref.host
+             && uHref.pathname
+             && uHref.pathname.match(/\.html$/i)) {
+                var fixedURL = html2xhtml(href);
+                // console.log(`LocalLinkHTML2XHTML orig href ${href} fixed ${fixedURL}`);
+                $link.attr('href', fixedURL); // MAP href
             }
         }
         return "ok";
     }
 }
-module.exports.mahabhuta.addMahafunc(new ImageURLFixerRelativizer());
 
 function rewriteURL(metadata, sourceURL, allowExternal) {
     // logger.trace('rewriteURL '+ sourceURL);
@@ -229,3 +286,63 @@ function computeRelativePrefixToRoot(source) {
     }
     return prefix === '' ? './' : prefix;
 };
+
+/**
+ * These renderers force the output file name to <em>.xhtml</em>, and ensure that
+ * file name matching accommodates <em>.xhtml</em> extensions.
+ */
+
+class AsciidocRendererOverride extends akasha.AsciidocRenderer {
+    filePath(fname) {
+        return html2xhtml(super.filePath(fname));
+    }
+
+    sourcePathMatchRenderPath(sourcePath, rendersTo) {
+        let rendersToXhtml =  html2xhtml(rendersTo);
+        // console.log(`AsciidocRendererOverride sourcePathMatchRenderPath rendersTo ${rendersTo} rendersToXhtml ${rendersToXhtml}`);
+        return super.sourcePathMatchRenderPath(sourcePath, rendersToXhtml);
+    }
+
+}
+
+class EJSRendererOverride extends akasha.EJSRenderer {
+    filePath(fname) {
+        return html2xhtml(super.filePath(fname));
+    }
+
+    sourcePathMatchRenderPath(sourcePath, rendersTo) {
+        let rendersToXhtml =  html2xhtml(rendersTo);
+        // console.log(`EJSRendererOverride sourcePathMatchRenderPath rendersTo ${rendersTo} rendersToXhtml ${rendersToXhtml}`);
+        return super.sourcePathMatchRenderPath(sourcePath, rendersToXhtml);
+    }
+
+}
+
+class MarkdownRendererOverride extends akasha.MarkdownRenderer {
+    filePath(fname) {
+        let superfname = super.filePath(fname);
+        let fname2xhtml = html2xhtml(superfname);
+        // console.log(`MarkdownRendererOverride fname ${fname} superfname ${superfname} fname2xhtml ${fname2xhtml}`);
+        return fname2xhtml;
+    }
+
+    sourcePathMatchRenderPath(sourcePath, rendersTo) {
+        let rendersToXhtml =  html2xhtml(rendersTo);
+        // console.log(`MarkdownRendererOverride sourcePathMatchRenderPath rendersTo ${rendersTo} rendersToXhtml ${rendersToXhtml}`);
+        return super.sourcePathMatchRenderPath(sourcePath, rendersToXhtml);
+    }
+
+}
+
+class JSONRendererOverride extends akasha.JSONRenderer {
+    filePath(fname) {
+        return html2xhtml(super.filePath(fname));
+    }
+
+    sourcePathMatchRenderPath(sourcePath, rendersTo) {
+        let rendersToXhtml =  html2xhtml(rendersTo);
+        // console.log(`JSONRendererOverride sourcePathMatchRenderPath rendersTo ${rendersTo} rendersToXhtml ${rendersToXhtml}`);
+        return super.sourcePathMatchRenderPath(sourcePath, rendersToXhtml);
+    }
+
+}
