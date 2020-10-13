@@ -14,7 +14,7 @@
   },
   "homepage": "https://github.com/akashacms/akasharender-epub#readme",
   "dependencies": {
-    "akasharender": "akashacms/akasharender",
+    "akasharender": "^0.7.x",
     "parse5": "^5.1.x",
     "xmlserializer": "^0.6.x"
   }
