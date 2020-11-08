@@ -4,7 +4,7 @@
   "description": "AkashaRender plugin to aid building EPUB's",
   "main": "index.js",
   "bin": {
-      "renderepub": "rendercli.js"
+      "epubrende": "./rendercli.js"
   },
   "repository": {
     "type": "git",
