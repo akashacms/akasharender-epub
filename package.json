@@ -1,6 +1,6 @@
 {
   "name": "@akashacms/plugins-epub",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "AkashaRender plugin to aid building EPUB's",
   "main": "index.js",
   "bin": {
@@ -19,6 +19,7 @@
   "dependencies": {
     "akasharender": "^0.7.x",
     "epubtools": "akashacms/epubtools#epubuilder",
+    "akashacms-dlassets": "akashacms/akashacms-dlassets",
     "fs-extra": "^9.0.1",
     "parse5": "^5.1.x",
     "xmlserializer": "^0.6.x"
