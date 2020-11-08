@@ -1,10 +1,10 @@
 {
   "name": "@akashacms/plugins-epub",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "AkashaRender plugin to aid building EPUB's",
   "main": "index.js",
   "bin": {
-      "epubrende": "./rendercli.js"
+      "epubrender": "./rendercli.js"
   },
   "repository": {
     "type": "git",
