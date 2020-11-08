@@ -3,6 +3,9 @@
   "version": "0.4.1",
   "description": "AkashaRender plugin to aid building EPUB's",
   "main": "index.js",
+  "bin": {
+      "renderepub": "rendercli.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/akashacms/akasharender-epub.git"
