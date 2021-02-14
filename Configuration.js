@@ -51,7 +51,7 @@ module.exports.Configuration = class Configuration extends epubConfiguration.Con
         // matter if the directory does not exist, because akashaRender will simply skip over
         // the nonexistent file.
         // Therefore it doesn't matter whether the directory actually exists or not.
-        
+
         /* try {
             await fs.access(this.sourceBookFullPath, fs.constants.R_OK);
         } catch (e) {
@@ -161,10 +161,16 @@ module.exports.Configuration = class Configuration extends epubConfiguration.Con
      * Directory where the raw files for the EPUB will be rendered.
      */
     get bookRenderDest() {
-        return this.YAML.akashaepub
-             && this.YAML.akashaepub.bookdest
+        if (this.YAML.akashaepub && this.YAML.akashaepub.bookdest) {
+            return this.YAML.akashaepub.bookdest;
+        } else if (this.YAML.rendered) {
+            return this.YAML.rendered;
+        } else {
+            return "out";
+        }
+        /* return (this.YAML.akashaepub && this.YAML.akashaepub.bookdest)
                 ? this.YAML.akashaepub.bookdest
-                : "out"; // : undefined;
+                : "out"; // : undefined; */
     }
     set bookRenderDest(newRenderRoot) {
         this.YAML.akashaepub.bookdest = newRenderRoot;
@@ -172,6 +178,7 @@ module.exports.Configuration = class Configuration extends epubConfiguration.Con
 
     get bookRenderDestFullPath() {
         if (!this.bookRenderDest) throw new Error('No bookRenderDest set');
+        // console.log(`bookRenderDestFullPath - configDirPath ${this.configDirPath} - bookRenderDest ${this.bookRenderDest}`);
         return path.normalize(
             path.join(
                 this.configDirPath, this.bookRenderDest ? this.bookRenderDest : ""
@@ -179,6 +186,11 @@ module.exports.Configuration = class Configuration extends epubConfiguration.Con
         );
     }
 
+    get plugins() {
+        return (this.YAML.akashaepub && this.YAML.akashaepub.plugins)
+            ? this.YAML.akashaepub.plugins
+            : [];
+    }
 
 }
 
@@ -189,9 +201,32 @@ async function readConfig(configFN) {
     let config = new module.exports.Configuration(yamlText);
     config.configFileName = configFN;
     // const YML = yaml.safeLoad(yamlText);
+    // console.log(config.plugins);
     config.akConfig = new akasha.Configuration();
+    /*
+     * This might work for putting plugins into the epubtools file.
+     * But it's proving impossible to test in the test directory.
+     **/
+    if (config.plugins.length <= 0) {
+        // console.log('No plugins specified')
+        config.akConfig
+            .use(require('./index' /*'@akashacms/plugins-epub'*/))
+            .use(require('akashacms-dlassets'));
+    } else {
+        // config.akConfig
+        //     .use(require('@akashacms/plugins-epub'));
+        for (let plugin of config.plugins) {
+            console.log(`Loading ${util.inspect(plugin)}`);
+            if (plugin.options) {
+                config.akConfig.use(require(plugin.name), plugin.options);
+            } else {
+                config.akConfig.use(require(plugin.name));
+            }
+        }
+    }
+    /*
     config.akConfig
-        .use(require('@akashacms/plugins-epub'))
+        .use(require('./index' /*'@akashacms/plugins-epub'* /))
         .use(require('akashacms-dlassets'), {
             // TODO support configuring this directory from book config
             // NOTE that if this is left out then dlassets
@@ -202,8 +237,8 @@ async function readConfig(configFN) {
             //      the cache directory
             // cachedir: path.join(__dirname, 'dlassets-cache')
         })
-        /* .use(require('akashacms-footnotes')) */
-        /* .use(require('akashacms-embeddables')) */;
+        /* .use(require('akashacms-footnotes')) * /
+        /* .use(require('akashacms-embeddables')) * /;*/
     
     // TODO Possibly have a plugins object like
     //
@@ -212,22 +247,41 @@ async function readConfig(configFN) {
     //          config:
     //               fields for config
 
-    // TODO Detect if bookroot, or assetsDir, or layoutsDir etc are arrays
-    // and run a loop
-
-    // NOTE This already handles the case of this being an object describing
-    // a complex directory
-
     // TODO Create a test case directory to test this CLI
-
-    // TODO Delete renderEPUB.js
 
     // TODO bump version number to match AkashaRender
 
     // TODO in epubtools, remove renderEPUB.js and fix manifest.js to not rely on AkashaRender.
 
-    config.akConfig.addDocumentsDir(config.bookroot);
-    if (config.assetsDir) config.akConfig.addAssetsDir(config.assetsDir);
+    if (!config.bookroot) {
+        throw new Error(`No bookroot specified`);
+    }
+
+    if (Array.isArray(config.bookroot)) {
+        for (let dir of config.bookroot) {
+           config.akConfig.addDocumentsDir(dir);
+        }
+    } else if (typeof config.bookroot === 'string'
+    || typeof config.bookroot === 'object') {
+        config.akConfig.addDocumentsDir(config.bookroot);
+    } else {
+        throw new Error(`Unknown bookroot ${util.inspect(config.bookroot)}`);
+    }
+
+    if (config.assetsDir) {
+        if (Array.isArray(config.assetsDir)) {
+            for (let dir of config.assetsDir) {
+                // console.log(`add assets dir ${dir}`);
+                config.akConfig.addAssetsDir(dir);
+            }
+        } else if (typeof config.assetsDir === 'string'
+         || typeof config.assetsDir === 'object') {
+            // console.log(`add assets dir ${util.inspect(config.assetsDir)}`);
+            config.akConfig.addAssetsDir(config.assetsDir);
+        } else {
+            throw new Error(`Unknown assetsDir ${util.inspect(config.assetsDir)}`);
+        }
+    }
     if (config.layoutsDir) config.akConfig.addLayoutsDir(config.layoutsDir);
     if (config.partialsDir) config.akConfig.addPartialsDir(config.partialsDir);
     if (config.stylesheets) {
@@ -242,7 +296,7 @@ async function readConfig(configFN) {
         xmlMode: true
     });
 
-    config.akConfig.setRenderDestination(config.renderTo);
+    config.akConfig.setRenderDestination(config.bookRenderDest);
 
     config.akConfig.prepare();
 
