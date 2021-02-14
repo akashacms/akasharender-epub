@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
+<head>
+<title><%= title %></title>
+<ak-stylesheets></ak-stylesheets>
+<ak-headerJavaScript></ak-headerJavaScript>
+</head>
+<body>
+    <section>
+    <header><h1><%= title %></h1></header>
+    <article>
+    <!-- <img figure src="/assets/images/bootstrap.svg" resize-to="/assets/images/bootstrap.png" alt="" width="64" height="64" title="Bootstrap"/> -->
+    <img figure src="/vendor/bootstrap-icons/bootstrap.svg" alt="" resize-width="64" width="64" height="64" title="Bootstrap"/>
+    <%- content %>
+    </article>
+    <footer style="margin-top: 5em;"></footer>
+    </section>
+<ak-footerJavaScript></ak-footerJavaScript>
+</body>
+</html>
