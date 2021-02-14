@@ -28,6 +28,7 @@ async function doRender(configFN) {
     await config.check();
     // const bookConfig = await epubtools.openProject(configFN); // configurator.readConfig(configFN);
     // renderEPUB.setconfig(bookConfig);
+    // console.log(config.bookRenderDestFullPath);
     await fs.mkdirs(config.bookRenderDestFullPath);
     await config.akConfig.copyAssets(); // await renderEPUB.copyAssets(bookConfig);
     await akasha.render(config.akConfig); // await renderEPUB.renderProject();
