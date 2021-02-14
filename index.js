@@ -70,7 +70,7 @@ module.exports = class RenderEPUBPlugin extends akasha.Plugin {
 
         // TODO in the electron app this will not work since Webpack blah-blah-blah
 
-        let moduleDirname = path.dirname(require.resolve(pluginName));
+        let moduleDirname = __dirname; // path.dirname(require.resolve(pluginName));
         // The partials directory overrides many templates used by
         // other plugins to make those custom tags safe for EPUB
         config.addPartialsDir(path.join(moduleDirname, 'partials'));
