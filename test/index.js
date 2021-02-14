@@ -8,6 +8,8 @@ const akasha     = require('akasharender');
 
 
 describe('read config file', function() {
+
+    this.timeout(10000);
     
     let config;
     const configFN = 'test.epubtools';
