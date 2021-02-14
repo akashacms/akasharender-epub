@@ -38,6 +38,8 @@ jspm_packages
 
 package-lock.json
 out
+out-icons
+out-plugins
 
 modified.epubtools
-test.epub
+*.epub
