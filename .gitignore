@@ -40,6 +40,9 @@ package-lock.json
 out
 out-icons
 out-plugins
+out-watch
 
 modified.epubtools
 *.epub
+
+test-watch.epub
