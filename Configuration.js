@@ -91,13 +91,31 @@ module.exports.Configuration = class Configuration extends epubConfiguration.Con
      */
     get bookroot() {
         // console.log(this.YAML);
-        return this.YAML
+        let ret = this.YAML
              && this.YAML.akashaepub.bookroot
                 ? this.YAML.akashaepub.bookroot
-                : "documents"; // : undefined; 
+                : "documents"; // : undefined;
+        // Make sure assets directory exists
+        let stats;
+        try {
+            stats = fs.statSync(ret);
+        } catch (e) {
+            stats = undefined;
+        }
+        if (stats && stats.isDirectory()) {
+            return ret;
+        } else if (ret === "documents") {
+            return undefined;
+        } else {
+            throw new Error(`bookroot does not exist ${ret}`);
+        }
     }
     set bookroot(newBookroot) {
         this.YAML.akashaepub.bookroot = newBookroot;
+    }
+
+    get baseMetadata() {
+        return this.YAML.akashaepub.baseMetadata;
     }
 
     /**
@@ -305,7 +323,16 @@ async function readConfig(configFN) {
         }
     } else if (typeof config.bookroot === 'string'
     || typeof config.bookroot === 'object') {
-        config.akConfig.addDocumentsDir(config.bookroot);
+        if (typeof config.bookroot === 'string'
+         && config.baseMetadata) {
+            config.akConfig.addDocumentsDir({
+                src: config.bookroot,
+                dest: '/',
+                baseMetadata: config.baseMetadata
+            });
+        } else {
+            config.akConfig.addDocumentsDir(config.bookroot);
+        }
     } else {
         throw new Error(`Unknown bookroot ${util.inspect(config.bookroot)}`);
     }
