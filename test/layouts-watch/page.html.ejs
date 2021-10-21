@@ -8,12 +8,21 @@
 </head>
 <body>
     <section>
-    <!-- data-style="height: calc(100vh - 5em); overflow-y: auto;" -->
-    <ebook-toc-menu id="ebook-toc-ol" 
-        data-classes='[ "ebook-toc-ol", "dropdown-menu" ]'
-        data-olliclasses='[ "" ]'
-        data-ollabeledby='ebookNavbarToCdropdown'></ebook-toc-menu>
-    <!-- ebook-navigation-header id="foobar"></ebook-navigation-header -->
+
+    <button class="btn btn-primary" type="button"
+            data-toggle="collapse" data-target="#collapseExample"
+            aria-expanded="false" aria-controls="collapseExample">
+        Table of Contents
+    </button>
+    <div class="collapse" id="collapseExample">
+        <div class="card card-body">
+            <ebook-toc-menu id="ebook-toc-ol"
+                data-classes='[ "ebook-toc-ol" ]'
+                data-olliclasses='[ "" ]'
+                data-ollabeledby='ebookNavbarToCdropdown'>
+            </ebook-toc-menu>
+        </div>
+    </div>
     <header><h1><%= title %></h1></header>
     <article><%- content %></article>
     <footer style="margin-top: 5em;"></footer>

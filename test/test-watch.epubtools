@@ -1,8 +1,62 @@
-# PROBLEMS
-# 2. Convert .html to .xhtml
-#    Scan all files for links to .html where
-#    there is corresponding .xhtml
-# 5. Generate NCX file if config says so
+
+# This EPUBTools configuration demonstrates live preview of an EPUB
+#
+# We use the epub-website plugin to provide custom elements for
+# generating a Table of Contents in each page.
+#
+# In the layouts-watch directory, in page templates, we can add
+# this code for a Bootstrap styled ToC viewer:
+#
+# <button class="btn btn-primary" type="button"
+#            data-toggle="collapse" data-target="#collapseExample"
+#            aria-expanded="false" aria-controls="collapseExample">
+#        Table of Contents
+# </button>
+# <div class="collapse" id="collapseExample">
+#        <div class="card card-body">
+#            <ebook-toc-menu id="ebook-toc-ol"
+#                data-classes='[ "ebook-toc-ol" ]'
+#                data-olliclasses='[ "" ]'
+#                data-ollabeledby='ebookNavbarToCdropdown'>
+#            </ebook-toc-menu>
+#        </div>
+#    </div>
+#
+# This generates a button controlling whether a collapsed section is
+# being viewed, and inside the collapsed area is a Table of Contents.
+#
+# To support this we need to set up Bootstrap.  Hence, the entries
+# in assetsDir to add Bootstrap to the built thing, as well as
+# stylesheets and JavaScript.  Finally we use the
+# @akashacms/theme-bootstrap package
+#
+# The @akashacms/theme-bootstrap and epub-website packages must be
+# installed in the same node_modules as the akasharender-epub package.
+# Normally that would mean installing everything using the
+# package.json for the eBook project.  However, for this test,
+# which is inside the akasharender-epub project, those two packages
+# must be installed in the akasharender-epub package directory, but
+# not in a way that will turn into a dependency that's installed
+# for our users.  Hence, in the test/package.json we have this script:
+#
+# "watch-test:setup": "cd .. && npm install 'github:akashacms/epub-website#watcher' 'akashacms/akashacms-theme-bootstrap#watcher' --no-save",
+#
+# This installs those packages, using --no-save, in the correct place.
+#
+# Then, to implement watch/live preview, we have these scripts:
+#
+# "watch-test": "npm-run-all  --parallel watch-test:render watch-test:preview",
+# "watch-test:render": "node ../rendercli.js watch-epub test-watch.epubtools",
+# "watch-test:preview": "live-server out-watch",
+#
+# This uses the watch-epub command in parallel with a live-server instance.
+# The live-server automatically watches the named directory, opens a
+# browser tab, and automatically causes reload when files are changed.
+#
+# The watch-epub command automatically watches for changes in the
+# source directories, and automatically rebuilds anything which changes.
+
+
 
 name: Test AkashaEPUB book
 akashaepub:
@@ -11,16 +65,29 @@ akashaepub:
     #      dest: '/'
     baseMetadata:
         bookHomeURL: /toc.xhtml
-    # These should default correctly
     layoutsDir: layouts-watch
-    # assetsDir: assets
+    assetsDir:
+      - assets
+      - src: 'node_modules/bootstrap/dist'
+        dest: 'vendor/bootstrap'
+      - src: 'node_modules/jquery/dist'
+        dest: 'vendor/jquery'
+      - src: 'node_modules/popper.js/dist'
+        dest: 'vendor/popper.js'
     bookdest: out-watch
     stylesheets:
         - { id: "stylesheet", href: "/css/style.css" }
+        - { id: "bootstrap", href: "/vendor/bootstrap/css/bootstrap.min.css" }
+    headerjavascript:
+        - { href: "/vendor/jquery/jquery.min.js" }
+    footerjavascript:
+        - { href: "/vendor/popper.js/umd/popper.min.js" }
+        - { href: "/vendor/bootstrap/js/bootstrap.min.js" }
     plugins:
         - name: ./index
         - name: akashacms-dlassets
         - name: epub-website
+        - name: '@akashacms/theme-bootstrap'
 epub: test-watch.epub
 toc:
     href: toc.xhtml

@@ -95,6 +95,10 @@ module.exports.Configuration = class Configuration extends epubConfiguration.Con
              && this.YAML.akashaepub.bookroot
                 ? this.YAML.akashaepub.bookroot
                 : "documents"; // : undefined;
+        // This could be an array of values
+        if (Array.isArray(ret)) {
+            return ret;
+        }
         // Make sure assets directory exists
         let stats;
         try {
@@ -135,6 +139,10 @@ module.exports.Configuration = class Configuration extends epubConfiguration.Con
              && this.YAML.akashaepub.assetsDir
                 ? this.YAML.akashaepub.assetsDir
                 : "assets"; // : undefined;
+        // This could be an array of values
+        if (Array.isArray(ret)) {
+            return ret;
+        }
         // Make sure assets directory exists
         let stats;
         try {
@@ -165,6 +173,10 @@ module.exports.Configuration = class Configuration extends epubConfiguration.Con
              && this.YAML.akashaepub.partialsDir
                 ? this.YAML.akashaepub.partialsDir
                 : "partials"; // : undefined;
+        // This could be an array of values
+        if (Array.isArray(ret)) {
+            return ret;
+        }
         // Make sure partials directory exists
         let stats;
         try {
@@ -195,6 +207,10 @@ module.exports.Configuration = class Configuration extends epubConfiguration.Con
              && this.YAML.akashaepub.layoutsDir
                 ? this.YAML.akashaepub.layoutsDir
                 : "layouts"; // : undefined;
+        // This could be an array of values
+        if (Array.isArray(ret)) {
+            return ret;
+        }
         // Make sure layouts directory exists
         let stats;
         try {
@@ -249,6 +265,24 @@ module.exports.Configuration = class Configuration extends epubConfiguration.Con
     get plugins() {
         return (this.YAML.akashaepub && this.YAML.akashaepub.plugins)
             ? this.YAML.akashaepub.plugins
+            : [];
+    }
+
+    get stylesheets() {
+        return (this.YAML.akashaepub && this.YAML.akashaepub.stylesheets)
+            ? this.YAML.akashaepub.stylesheets
+            : [];
+    }
+
+    get footerjavascript() {
+        return (this.YAML.akashaepub && this.YAML.akashaepub.footerjavascript)
+            ? this.YAML.akashaepub.footerjavascript
+            : [];
+    }
+
+    get headerjavascript() {
+        return (this.YAML.akashaepub && this.YAML.akashaepub.headerjavascript)
+            ? this.YAML.akashaepub.headerjavascript
             : [];
     }
 
@@ -358,6 +392,17 @@ async function readConfig(configFN) {
     if (config.stylesheets) {
         for (let style of config.stylesheets) {
             config.akConfig.addStylesheet(style);
+        }
+    }
+
+    if (config.footerjavascript) {
+        for (let js of config.footerjavascript) {
+            config.akConfig.addFooterJavaScript(js);
+        }
+    }
+    if (config.headerjavascript) {
+        for (let js of config.headerjavascript) {
+            config.akConfig.addHeaderJavaScript(js);
         }
     }
     

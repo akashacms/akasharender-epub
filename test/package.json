@@ -28,7 +28,7 @@
     "watch-test": "npm-run-all  --parallel watch-test:render watch-test:preview",
     "watch-test:render": "node ../rendercli.js watch-epub test-watch.epubtools",
     "watch-test:preview": "live-server out-watch",
-    "watch-test:setup": "cd .. && npm install 'github:akashacms/epub-website#watcher' --no-save",
+    "watch-test:setup": "cd .. && npm install 'github:akashacms/epub-website#watcher' 'akashacms/akashacms-theme-bootstrap#watcher' --no-save",
     "build-plugins": "npm-run-all build-plugins:install build-plugins:render build-plugins:mkmeta build-plugins:check-exp build-plugins:package",
     "build-plugins:install": "cd .. && npm install @akashacms/plugins-footnotes --no-save",
     "build-plugins:render": "node ../rendercli.js render test-plugins.epubtools",
@@ -40,6 +40,9 @@
   },
   "dependencies": {
     "bootstrap-icons": "^1.1.0",
+    "bootstrap": "^4.5.x",
+    "jquery": "^3.5.x",
+    "popper.js": "^1.16.x",
     "chai": "^4.2.0",
     "live-server": "^1.2.1",
     "mocha": "^8.2.0",
