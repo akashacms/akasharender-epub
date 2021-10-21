@@ -5,6 +5,7 @@ const program    = require('commander');
 const yaml       = require('js-yaml');
 const akasha     = require('akasharender');
 const data       = require('akasharender/data');
+const _watchman = import('akasharender/cache/watchman.mjs');
 const fs         = require('fs-extra');
 const epubconfig = require('./Configuration');
 
@@ -19,6 +20,18 @@ program
             await doRender(configFN);
         } catch (e) {
             console.error(`render command ERRORED ${e.stack}`);
+        }
+    });
+
+program
+    .command('watch-epub <configFN>')
+    .description('Track changes to files in a site, and rebuild anything that changes')
+    .action(async (configFN, cmdObj) => {
+        // console.log(`render: akasha: ${util.inspect(akasha)}`);
+        try {
+            await doWatchEPUB(configFN);
+        } catch (e) {
+            console.error(`watch command ERRORED ${e.stack}`);
         }
     });
 
@@ -39,3 +52,21 @@ async function doRender(configFN) {
     await akasha.closeCaches();
 }
 module.exports.doRender = doRender;
+
+async function doWatchEPUB(configFN) {
+    let config = await epubconfig.readConfig(configFN);
+    await config.check();
+    const akConfig = config.akConfig;
+    await akasha.cacheSetupComplete(akConfig);
+    data.init();
+    await akConfig.hookBeforeSiteRendered();
+    // const bookConfig = await epubtools.openProject(configFN); // configurator.readConfig(configFN);
+    // renderEPUB.setconfig(bookConfig);
+    // console.log(config.bookRenderDestFullPath);
+    await fs.mkdirs(config.bookRenderDestFullPath);
+    await akConfig.copyAssets(); // await renderEPUB.copyAssets(bookConfig);
+
+    const watchman = (await _watchman).watchman;
+    await watchman(akConfig);
+}
+module.exports.doWatchEPUB = doWatchEPUB;
