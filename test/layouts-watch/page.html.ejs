@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
+<head>
+<title><%= title %></title>
+<ak-stylesheets></ak-stylesheets>
+<ak-headerJavaScript></ak-headerJavaScript>
+</head>
+<body>
+    <section>
+    <!-- data-style="height: calc(100vh - 5em); overflow-y: auto;" -->
+    <ebook-toc-menu id="ebook-toc-ol" 
+        data-classes='[ "ebook-toc-ol", "dropdown-menu" ]'
+        data-olliclasses='[ "" ]'
+        data-ollabeledby='ebookNavbarToCdropdown'></ebook-toc-menu>
+    <!-- ebook-navigation-header id="foobar"></ebook-navigation-header -->
+    <header><h1><%= title %></h1></header>
+    <article><%- content %></article>
+    <footer style="margin-top: 5em;"></footer>
+    </section>
+<ak-footerJavaScript></ak-footerJavaScript>
+</body>
+</html>
