@@ -4,6 +4,7 @@ const program    = require('commander');
 // const renderEPUB = require('./renderEPUB');
 const yaml       = require('js-yaml');
 const akasha     = require('akasharender');
+const data       = require('akasharender/data');
 const fs         = require('fs-extra');
 const epubconfig = require('./Configuration');
 
@@ -26,11 +27,15 @@ program.parse(process.argv);
 async function doRender(configFN) {
     let config = await epubconfig.readConfig(configFN);
     await config.check();
+    const akConfig = config.akConfig;
+    await akasha.cacheSetupComplete(akConfig);
+    data.init();
     // const bookConfig = await epubtools.openProject(configFN); // configurator.readConfig(configFN);
     // renderEPUB.setconfig(bookConfig);
     // console.log(config.bookRenderDestFullPath);
     await fs.mkdirs(config.bookRenderDestFullPath);
-    await config.akConfig.copyAssets(); // await renderEPUB.copyAssets(bookConfig);
-    await akasha.render(config.akConfig); // await renderEPUB.renderProject();
+    await akConfig.copyAssets(); // await renderEPUB.copyAssets(bookConfig);
+    await akasha.render(akConfig); // await renderEPUB.renderProject();
+    await akasha.closeCaches();
 }
 module.exports.doRender = doRender;

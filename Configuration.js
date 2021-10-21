@@ -113,10 +113,24 @@ module.exports.Configuration = class Configuration extends epubConfiguration.Con
      * Directory where asset files are stored
      */
     get assetsDir() {
-        return this.YAML.akashaepub
+        let ret = this.YAML.akashaepub
              && this.YAML.akashaepub.assetsDir
                 ? this.YAML.akashaepub.assetsDir
-                : "assets"; // : undefined; 
+                : "assets"; // : undefined;
+        // Make sure assets directory exists
+        let stats;
+        try {
+            stats = fs.statSync(ret);
+        } catch (e) {
+            stats = undefined;
+        }
+        if (stats && stats.isDirectory()) {
+            return ret;
+        } else if (ret === "assets") {
+            return undefined;
+        } else {
+            throw new Error(`assetsDir does not exist ${ret}`);
+        }
     }
     set assetsDir(newAssetsDir) {
         this.YAML.akashaepub.assetsDir = newAssetsDir;
@@ -128,11 +142,25 @@ module.exports.Configuration = class Configuration extends epubConfiguration.Con
     /**
      * Directory where partial templates are stored
      */
-    get partialsDir() { 
-        return this.YAML.akashaepub
+    get partialsDir() {
+        let ret = this.YAML.akashaepub
              && this.YAML.akashaepub.partialsDir
                 ? this.YAML.akashaepub.partialsDir
-                : "partials"; // : undefined; 
+                : "partials"; // : undefined;
+        // Make sure partials directory exists
+        let stats;
+        try {
+            stats = fs.statSync(ret);
+        } catch (e) {
+            stats = undefined;
+        }
+        if (stats && stats.isDirectory()) {
+            return ret;
+        } else if (ret === "partials") {
+            return undefined;
+        } else {
+            throw new Error(`partialsDir does not exist ${ret}`);
+        }
     }
     set partialsDir(newPartialsDir) {
         this.YAML.akashaepub.partialsDir = newPartialsDir;
@@ -145,10 +173,24 @@ module.exports.Configuration = class Configuration extends epubConfiguration.Con
      * Directory where layoout templates are stored
      */
     get layoutsDir() { 
-        return this.YAML.akashaepub
+        let ret = this.YAML.akashaepub
              && this.YAML.akashaepub.layoutsDir
                 ? this.YAML.akashaepub.layoutsDir
-                : "layouts"; // : undefined; 
+                : "layouts"; // : undefined;
+        // Make sure layouts directory exists
+        let stats;
+        try {
+            stats = fs.statSync(ret);
+        } catch (e) {
+            stats = undefined;
+        }
+        if (stats && stats.isDirectory()) {
+            return ret;
+        } else if (ret === "layouts") {
+            return undefined;
+        } else {
+            throw new Error(`layoutsDir does not exist ${ret}`);
+        }
     }
     set layoutsDir(newLayoutsDir) {
         this.YAML.akashaepub.layoutsDir = newLayoutsDir;
@@ -208,7 +250,7 @@ async function readConfig(configFN) {
      * But it's proving impossible to test in the test directory.
      **/
     if (config.plugins.length <= 0) {
-        // console.log('No plugins specified')
+        // console.log('No plugins specified -- loading @akashacms/plugins-epub - akashacms-dlassets')
         config.akConfig
             .use(require('./index' /*'@akashacms/plugins-epub'*/))
             .use(require('akashacms-dlassets'));
@@ -283,7 +325,9 @@ async function readConfig(configFN) {
         }
     }
     if (config.layoutsDir) config.akConfig.addLayoutsDir(config.layoutsDir);
+    // console.log(`config partialsDir `, config.partialsDir);
     if (config.partialsDir) config.akConfig.addPartialsDir(config.partialsDir);
+    // console.log(`config config.akConfig `, config.akConfig.partialsDir);
     if (config.stylesheets) {
         for (let style of config.stylesheets) {
             config.akConfig.addStylesheet(style);
