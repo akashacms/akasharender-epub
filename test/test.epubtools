@@ -14,6 +14,8 @@ akashaepub:
     stylesheets:
         - { id: "stylesheet", href: "/css/style.css" }
 epub: test.epub
+# Uncomment this to test recursive directory support
+# rendered: out-build/recursive/very/deep
 toc:
     href: toc.xhtml
     id: toc

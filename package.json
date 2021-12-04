@@ -20,7 +20,6 @@
     "akasharender": "akashacms/akasharender#watcher",
     "epubtools": "akashacms/epubtools",
     "akashacms-dlassets": "akashacms/akashacms-dlassets",
-    "fs-extra": "^9.0.1",
     "parse5": "^5.1.x",
     "xmlserializer": "^0.6.x"
   }

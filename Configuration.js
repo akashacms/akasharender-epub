@@ -235,6 +235,8 @@ module.exports.Configuration = class Configuration extends epubConfiguration.Con
 
     /**
      * Directory where the raw files for the EPUB will be rendered.
+     * 
+     * TODO Convert this to only use <code>this.YAML.rendered</code>
      */
     get bookRenderDest() {
         if (this.YAML.akashaepub && this.YAML.akashaepub.bookdest) {

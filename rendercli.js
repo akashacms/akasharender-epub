@@ -6,7 +6,7 @@ const yaml       = require('js-yaml');
 const akasha     = require('akasharender');
 const data       = require('akasharender/data');
 const _watchman = import('akasharender/cache/watchman.mjs');
-const fs         = require('fs-extra');
+const fs         = require('fs').promises;
 const epubconfig = require('./Configuration');
 
 process.title = 'akashacms-epub';
@@ -46,7 +46,7 @@ async function doRender(configFN) {
     // const bookConfig = await epubtools.openProject(configFN); // configurator.readConfig(configFN);
     // renderEPUB.setconfig(bookConfig);
     // console.log(config.bookRenderDestFullPath);
-    await fs.mkdirs(config.bookRenderDestFullPath);
+    await fs.mkdir(config.bookRenderDestFullPath, { recursive: true });
     await akConfig.copyAssets(); // await renderEPUB.copyAssets(bookConfig);
     await akasha.render(akConfig); // await renderEPUB.renderProject();
     await akasha.closeCaches();
@@ -63,7 +63,7 @@ async function doWatchEPUB(configFN) {
     // const bookConfig = await epubtools.openProject(configFN); // configurator.readConfig(configFN);
     // renderEPUB.setconfig(bookConfig);
     // console.log(config.bookRenderDestFullPath);
-    await fs.mkdirs(config.bookRenderDestFullPath);
+    await fs.mkdir(config.bookRenderDestFullPath, { recursive: true });
     await akConfig.copyAssets(); // await renderEPUB.copyAssets(bookConfig);
 
     const watchman = (await _watchman).watchman;
