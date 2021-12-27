@@ -25,6 +25,9 @@
   "bin": {
     "epubrender": "./rendercli.js"
   },
+  "scripts": {
+    "dopublish": "npm publish --access public"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/akashacms/akasharender-epub.git"
