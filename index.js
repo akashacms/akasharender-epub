@@ -84,9 +84,9 @@ module.exports = class RenderEPUBPlugin extends akasha.Plugin {
          * Note that external images and external CSS stylesheets is also a
          * big requirement in EPUB.  This plugin used to contain a Mahafunc to
          * handle downloading those files.  However that Mahafunc was spun off
-         * to become the akashacms-dlassets plugin.
+         * to become the @akashacms/plugins-dlassets plugin.
          * 
-         * Therefore akashacms-dlassets is required to successfully package
+         * Therefore @akashacms/plugins-dlassets is required to successfully package
          * EPUB's that reference external assets.
          */
         let arrayOptions = {};

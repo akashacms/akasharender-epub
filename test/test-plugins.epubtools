@@ -16,7 +16,7 @@ akashaepub:
         - { id: "stylesheet", href: "/css/style.css" }
     plugins:
         - name: ./index.js
-        - name: akashacms-dlassets
+        - name: "@akashacms/plugins-dlassets"
         - name: "@akashacms/plugins-footnotes"
           options:
             opt1: value

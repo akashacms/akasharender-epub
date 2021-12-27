@@ -307,12 +307,12 @@ async function readConfig(configFN) {
         // console.log('No plugins specified -- loading @akashacms/plugins-epub - akashacms-dlassets')
         config.akConfig
             .use(require('./index' /*'@akashacms/plugins-epub'*/))
-            .use(require('akashacms-dlassets'));
+            .use(require('@akashacms/plugins-dlassets'));
     } else {
         // config.akConfig
         //     .use(require('@akashacms/plugins-epub'));
         for (let plugin of config.plugins) {
-            console.log(`Loading ${util.inspect(plugin)}`);
+            // console.log(`Loading ${util.inspect(plugin)}`);
             if (plugin.options) {
                 config.akConfig.use(require(plugin.name), plugin.options);
             } else {
@@ -323,7 +323,7 @@ async function readConfig(configFN) {
     /*
     config.akConfig
         .use(require('./index' /*'@akashacms/plugins-epub'* /))
-        .use(require('akashacms-dlassets'), {
+        .use(require('@akashacms/plugins-dlassets'), {
             // TODO support configuring this directory from book config
             // NOTE that if this is left out then dlassets
             //      defaults to not caching external images

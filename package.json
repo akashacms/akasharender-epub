@@ -1,8 +1,27 @@
 {
   "name": "@akashacms/plugins-epub",
-  "version": "0.4.5",
+  "version": "0.8.0",
   "description": "AkashaRender plugin to aid building EPUB's",
   "main": "index.js",
+  "keywords": [
+    "epub-builder",
+    "epub-maker",
+    "epub-generator",
+    "epub-generation",
+    "epub-creator",
+    "epub-constructor",
+    "epub3",
+    "epub",
+    "ebook",
+    "ebooks",
+    "books",
+    "book",
+    "epub-parser",
+    "epub-packager",
+    "packager",
+    "akashacms",
+    "akashaepub"
+  ],
   "bin": {
     "epubrender": "./rendercli.js"
   },
@@ -20,9 +39,9 @@
     "node": ">=12.4"
   },
   "dependencies": {
-    "akasharender": "akashacms/akasharender#watcher",
-    "epubtools": "akashacms/epubtools",
-    "akashacms-dlassets": "akashacms/akashacms-dlassets",
+    "akasharender": "^0.8.x",
+    "epubtools": "^0.8.x",
+    "@akashacms/plugins-dlassets": "^0.8.x",
     "parse5": "^5.1.x",
     "xmlserializer": "^0.6.x"
   }
