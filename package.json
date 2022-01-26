@@ -1,6 +1,6 @@
 {
   "name": "@akashacms/plugins-epub",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "AkashaRender plugin to aid building EPUB's",
   "main": "index.js",
   "keywords": [

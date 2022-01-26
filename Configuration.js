@@ -17,8 +17,8 @@
  *  limitations under the License.
  */
 
- const epubtools  = require('epubtools');
-const epubConfiguration = require('epubtools/Configuration');
+const epubtools  = require('epubtools');
+const epubConfiguration = epubtools.Configuration;
 const fs         = require('fs-extra');
 const path       = require('path');
 const util       = require('util');
@@ -27,7 +27,7 @@ const akasha     = require('akasharender');
 
 const _config_akasha = Symbol('akConfig');
 
-module.exports.Configuration = class Configuration extends epubConfiguration.Configuration {
+module.exports.Configuration = class Configuration extends epubConfiguration {
 
     constructor(yamlText) {
         super(yamlText);

@@ -20,6 +20,7 @@ describe('read config file', function() {
 
     it('should verify config object', async function() {
         await config.check();
+        // console.log(config);
     });
 
     it('should have correct config file name', function() {

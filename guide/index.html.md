@@ -1,7 +1,7 @@
 ---
 layout: plugin-documentation.html.ejs
 title: 'AskashaEPUB @akashacms/plugins-epub plugin documentation'
-publicationDate: December 29, 2018
+publicationDate: January 26, 2022
 ---
 
 The `@akashacms/plugins-epub` plugin helps modify AkashaRender-rendered content to work well in an EPUB.  It is meant to be used along with _epubtools_ to generate an EPUB-formatted electronic book.  See https://akashacms.com/epubtools/toc.html for more information.
@@ -19,7 +19,7 @@ To add `@akashacms/plugins-epub` to a project directory, add the following to `p
 ```
   "dependencies": {
     ...
-    "@akashacms/plugins-epub": "^0.4.x",
+    "@akashacms/plugins-epub": "^0.8.2",
     ...
   }
 ```
