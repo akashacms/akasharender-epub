@@ -106,6 +106,7 @@ module.exports.Configuration = class Configuration extends epubConfiguration.Con
         } catch (e) {
             stats = undefined;
         }
+        // console.log(`bookroot `, ret);
         if (stats && stats.isDirectory()) {
             return ret;
         } else if (ret === "documents") {
@@ -173,6 +174,7 @@ module.exports.Configuration = class Configuration extends epubConfiguration.Con
              && this.YAML.akashaepub.partialsDir
                 ? this.YAML.akashaepub.partialsDir
                 : "partials"; // : undefined;
+        // console.log(`partialsDir - `, ret);
         // This could be an array of values
         if (Array.isArray(ret)) {
             return ret;

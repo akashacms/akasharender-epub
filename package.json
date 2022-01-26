@@ -1,6 +1,6 @@
 {
   "name": "@akashacms/plugins-epub",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "AkashaRender plugin to aid building EPUB's",
   "main": "index.js",
   "keywords": [
@@ -46,6 +46,7 @@
     "epubtools": "^0.8.x",
     "@akashacms/plugins-dlassets": "^0.8.x",
     "parse5": "^5.1.x",
-    "xmlserializer": "^0.6.x"
+    "xmlserializer": "^0.6.x",
+    "@xmldom/xmldom": "0.8.0"
   }
 }

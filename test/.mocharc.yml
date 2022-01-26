@@ -1,0 +1,5 @@
+file:
+  - index.js
+package: './package.json'
+parallel: false
+recursive: false
