@@ -47,6 +47,6 @@
     "@akashacms/plugins-dlassets": "^0.8.2",
     "parse5": "^5.1.x",
     "xmlserializer": "^0.6.x",
-    "@xmldom/xmldom": "0.8.5"
+    "@xmldom/xmldom": "0.8.13"
   }
 }
