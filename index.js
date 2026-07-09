@@ -54,10 +54,10 @@ module.exports = class RenderEPUBPlugin extends akasha.Plugin {
          * <em>filePath</em> method to ensure the rendered file is output to 
          * the <em>.xhtml</em> extension.
          */
-        config.registerOverrideRenderer(new AsciidocRendererOverride());
-        config.registerOverrideRenderer(new EJSRendererOverride());
-        config.registerOverrideRenderer(new MarkdownRendererOverride());
-        config.registerOverrideRenderer(new JSONRendererOverride());
+        config.registerOverrideRenderer(new AsciidocRendererOverride(pluginName, akasha, this));
+        config.registerOverrideRenderer(new EJSRendererOverride(pluginName, akasha, this));
+        config.registerOverrideRenderer(new MarkdownRendererOverride(pluginName, akasha, this));
+        config.registerOverrideRenderer(new JSONRendererOverride(pluginName, akasha, this));
         
         /**
          * This is where XHTML mode for output is selected
@@ -91,12 +91,12 @@ module.exports = class RenderEPUBPlugin extends akasha.Plugin {
          */
         let arrayOptions = {};
         let mahafuncs = new mahabhuta.MahafuncArray(`${pluginName} support`, arrayOptions);
-        mahafuncs.addMahafunc(new OEmbedCleanup());
-        mahafuncs.addMahafunc(new AnchorNameCleanup());
-        mahafuncs.addMahafunc(new HnInParagraphCleanup());
-        mahafuncs.addMahafunc(new LocalLinkRelativizer());
-        mahafuncs.addMahafunc(new LocalLinkHTML2XHTML());
-        mahafuncs.addMahafunc(new ImageURLFixerRelativizer());
+        mahafuncs.addMahafunc(new OEmbedCleanup(pluginName, akasha, this));
+        mahafuncs.addMahafunc(new AnchorNameCleanup(pluginName, akasha, this));
+        mahafuncs.addMahafunc(new HnInParagraphCleanup(pluginName, akasha, this));
+        mahafuncs.addMahafunc(new LocalLinkRelativizer(pluginName, akasha, this));
+        mahafuncs.addMahafunc(new LocalLinkHTML2XHTML(pluginName, akasha, this));
+        mahafuncs.addMahafunc(new ImageURLFixerRelativizer(pluginName, akasha, this));
         // console.log(`RenderEPUBPlugin `, mahafuncs);
         config.addMahabhuta(mahafuncs);
     }
@@ -112,7 +112,7 @@ const html2xhtml = (s) => { return s.replace(/\.html$/i, ".xhtml"); }
  * Hence this relies on overriding the partial.  Plus this Mahafunc cleans up
  * the messed up HTML that is observed.
  */
-class OEmbedCleanup extends mahabhuta.Munger {
+class OEmbedCleanup extends akasha.Munger {
     get selector() { return '.akasharender-epub-embed-preview'; }
     process($, $link, metadata, dirty) {
         // console.log(`akasharender-epub-embed-preview ${$link.find('body').html()}`);
@@ -142,7 +142,7 @@ class AnchorNameCleanup extends mahabhuta.Munger {
  * There are cases where Hn tags end up inside a &lt;p&gt; tag, and EPUB
  * barfs up a nasty error message on that.  This removes that condition.
  */
-class HnInParagraphCleanup extends mahabhuta.Munger {
+class HnInParagraphCleanup extends akasha.Munger {
     get selector() { return 'p > h1, p > h2, p > h3, p > h4, p > h5, p > div'; }
     process($, $link, metadata, dirty) {
         $link.parent().after($link.parent().html());
@@ -156,7 +156,7 @@ class HnInParagraphCleanup extends mahabhuta.Munger {
  * rather than a fixed path.  This handles rewriting these for &lt;a&gt;
  * and &lt;link&gt; tags.
  */
-class LocalLinkRelativizer extends mahabhuta.Munger {
+class LocalLinkRelativizer extends akasha.Munger {
     get selector() { return 'html body a, html head link'; }
     async process($, $link, metadata, dirty) {
         var href   = $link.attr('href');
@@ -180,7 +180,7 @@ class LocalLinkRelativizer extends mahabhuta.Munger {
 /**
  * Like LocalLinkRelativizer but handles &lt;img&gt tags
  */
-class ImageURLFixerRelativizer extends mahabhuta.Munger {
+class ImageURLFixerRelativizer extends akasha.Munger {
     get selector() { return 'html body img'; }
     async process($, $link, metadata, dirty) {
         var src   = $link.attr('src');
@@ -204,7 +204,7 @@ class ImageURLFixerRelativizer extends mahabhuta.Munger {
  * we need to change links to local <em>.html</em> resources to use
  * the <em>.xhtml</em> extension instead.
  */
-class LocalLinkHTML2XHTML extends mahabhuta.Munger {
+class LocalLinkHTML2XHTML extends akasha.Munger {
     get selector() { return 'html body a'; }
     async process($, $link, metadata, dirty) {
         var href   = $link.attr('href');
