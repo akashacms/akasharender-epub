@@ -47,9 +47,14 @@
     "@akashacms/plugins-dlassets": "akashacms/akashacms-dlassets",
     "parse5": "^8.x",
     "xmlserializer": "^0.6.x",
-    "@xmldom/xmldom": "0.9.10"
+    "@xmldom/xmldom": "0.9.12"
   },
   "allowScripts": {
     "sharp@0.34.5": true
+  },
+  "overrides": {
+    "cheerio": {
+      "encoding-sniffer": "^1.x"
+    }
   }
 }
